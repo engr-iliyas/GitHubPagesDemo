@@ -16,7 +16,8 @@ code .
 - goto settings tab
 - goto pages
 - 
-# push an existing repository from the command line
-git remote add origin https://github.com/engr-iliyas/GitHubPagesDemo.git
-git branch -M main
-git push -u origin main
+# setup blazor project
+- switch to main branch
+- dotnet new blazorwasm
+- sync changes
+
