@@ -7,7 +7,7 @@ code .
 # test: create a html file
 # initialize git and publish to github
 - Ctrl + shift + g
-- "Initialize repository"
+<!-- - "Initialize repository" -->
 - "Publish to GitHub
 # create "gh-pages" branch
 # setup pages
