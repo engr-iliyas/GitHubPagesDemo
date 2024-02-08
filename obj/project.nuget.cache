@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "moDoNDdCcl63QIN9lYHuxx7BOgBpdan/sXNRgZ5Nf5WnHLdbe2Pxd5AYZZMOBrvbsP69+Q+uJFA0bs7nzavZUg==",
+  "dgSpecHash": "vkY78R6yVXWH/buD4ASXimDOTtQb0+nupqv0AYhkMrKm8i4j42r+lnxew9Gx/K0qG5d49EAK/U1HubIwucxVfQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Iliyas\\Desktop\\GitHubPagesDemo\\GitHubPagesDemo.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Iliyas\\.nuget\\packages\\blazor.bootstrap\\1.11.1\\blazor.bootstrap.1.11.1.nupkg.sha512",
     "C:\\Users\\Iliyas\\.nuget\\packages\\microsoft.aspnetcore.authorization\\8.0.1\\microsoft.aspnetcore.authorization.8.0.1.nupkg.sha512",
     "C:\\Users\\Iliyas\\.nuget\\packages\\microsoft.aspnetcore.components\\8.0.1\\microsoft.aspnetcore.components.8.0.1.nupkg.sha512",
     "C:\\Users\\Iliyas\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\8.0.1\\microsoft.aspnetcore.components.analyzers.8.0.1.nupkg.sha512",

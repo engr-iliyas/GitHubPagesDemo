@@ -2,6 +2,24 @@
   "version": 3,
   "targets": {
     "net8.0": {
+      "Blazor.Bootstrap/1.11.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.Web": "6.0.26"
+        },
+        "compile": {
+          "lib/net6.0/BlazorBootstrap.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/BlazorBootstrap.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazor.Bootstrap.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazor.Bootstrap.props": {}
+        }
+      },
       "Microsoft.AspNetCore.Authorization/8.0.1": {
         "type": "package",
         "dependencies": {
@@ -494,6 +512,24 @@
       }
     },
     "net8.0/browser-wasm": {
+      "Blazor.Bootstrap/1.11.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.Web": "6.0.26"
+        },
+        "compile": {
+          "lib/net6.0/BlazorBootstrap.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/BlazorBootstrap.dll": {}
+        },
+        "build": {
+          "buildTransitive/Blazor.Bootstrap.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Blazor.Bootstrap.props": {}
+        }
+      },
       "Microsoft.AspNetCore.Authorization/8.0.1": {
         "type": "package",
         "dependencies": {
@@ -981,6 +1017,31 @@
     }
   },
   "libraries": {
+    "Blazor.Bootstrap/1.11.1": {
+      "sha512": "7KzYsDvN+fpJvlcVdbbx6Ywc2LFW20BwKGsWMGYoqFnJtLH0eXH8Y24wpk9dq/oiU3hSTvZ7QkXfGzvXMUh3Bg==",
+      "type": "package",
+      "path": "blazor.bootstrap/1.11.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "128X128.png",
+        "README.md",
+        "blazor.bootstrap.1.11.1.nupkg.sha512",
+        "blazor.bootstrap.nuspec",
+        "build/Blazor.Bootstrap.props",
+        "build/Microsoft.AspNetCore.StaticWebAssets.props",
+        "buildMultiTargeting/Blazor.Bootstrap.props",
+        "buildTransitive/Blazor.Bootstrap.props",
+        "lib/net6.0/BlazorBootstrap.dll",
+        "staticwebassets/Blazor.Bootstrap.bundle.scp.css",
+        "staticwebassets/blazor.bootstrap.css",
+        "staticwebassets/blazor.bootstrap.js",
+        "staticwebassets/blazor.bootstrap.pdf.js",
+        "staticwebassets/icon/128X128.png",
+        "staticwebassets/pdfjs-4.0.379.min.mjs",
+        "staticwebassets/pdfjs-4.0.379.worker.min.mjs"
+      ]
+    },
     "Microsoft.AspNetCore.Authorization/8.0.1": {
       "sha512": "RYBk9d+Zb6V2u2hpgSSlCTvV6HvNf8T8OA7coLn+J4sdWLbdVkb8/b2tpRRENTGXK31ayCvtUPhP4wv2ZMn4cQ==",
       "type": "package",
@@ -2050,6 +2111,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "Blazor.Bootstrap >= 1.11.1",
       "Microsoft.AspNetCore.Components.WebAssembly >= 8.0.1",
       "Microsoft.AspNetCore.Components.WebAssembly.DevServer >= 8.0.1",
       "Microsoft.NET.ILLink.Tasks >= 8.0.1",
@@ -2095,6 +2157,10 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "Blazor.Bootstrap": {
+            "target": "Package",
+            "version": "[1.11.1, )"
+          },
           "Microsoft.AspNetCore.Components.WebAssembly": {
             "target": "Package",
             "version": "[8.0.1, )"

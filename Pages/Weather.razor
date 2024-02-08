@@ -13,27 +13,20 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <Grid TItem="WeatherForecast" class="table table-hover table-bordered table-striped" Data="forecasts.ToList()" AllowFiltering="true" Responsive="true">
+        <GridColumn TItem="WeatherForecast" HeaderText="Date" PropertyName="Date" SortKeySelector="item => item.Date">
+            @context.Date.ToShortDateString()
+        </GridColumn>
+        <GridColumn TItem="WeatherForecast" HeaderText="Temp. (C)" PropertyName="TemperatureC" SortKeySelector="item => item.TemperatureC">
+            @context.TemperatureC
+        </GridColumn>
+        <GridColumn TItem="WeatherForecast" HeaderText="Temp. (F)" PropertyName="TemperatureF" SortKeySelector="item => item.TemperatureF">
+            @context.TemperatureF
+        </GridColumn>
+        <GridColumn TItem="WeatherForecast" HeaderText="Summary" PropertyName="Summary" SortKeySelector="item => item.Summary">
+            @context.Summary
+        </GridColumn>
+    </Grid>
 }
 
 @code {
