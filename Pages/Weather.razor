@@ -13,7 +13,7 @@
 }
 else
 {
-    <Grid TItem="WeatherForecast" class="table table-hover table-bordered table-striped" Data="forecasts.ToList()" AllowFiltering="true" Responsive="true">
+    <Grid TItem="WeatherForecast" class="table table-hover table-bordered table-striped" Data="forecasts.ToList()" AllowSorting="true" AllowFiltering="true" Responsive="true">
         <GridColumn TItem="WeatherForecast" HeaderText="Date" PropertyName="Date" SortKeySelector="item => item.Date">
             @context.Date.ToShortDateString()
         </GridColumn>
