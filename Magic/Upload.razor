@@ -1,0 +1,78 @@
+﻿@typeparam TItem where TItem : class, new()
+
+<InputFile OnChange=UploadAsync class="form-control" accept=".xlsx" />
+
+@code {
+    [Inject] protected PreloadService Preload { get; set; } = default!;
+
+    private async Task UploadAsync(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            Preload.Show();
+            using (var stream = new MemoryStream())
+            {
+                await e.File.OpenReadStream().CopyToAsync(stream);
+                using (var workbook = new XLWorkbook(stream))
+                {
+                    var service = factory.GetDataService<TItem>();
+                    var items = Process(workbook.Worksheets.SelectMany(t => t.Tables).ToList());
+                    service.Add(items);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            toast.Notify(new(ToastType.Danger, $"{typeof(TItem).Name} Upload: {ex.Message}!"));
+        }
+        finally
+        {
+            Preload.Hide();            
+        }
+    }
+
+    List<TItem> Process(List<IXLTable> tables)
+    {
+        List<TItem> items = new();
+        foreach (var table in tables)
+        {
+            if (typeof(TItem).Name == table.Name)
+            {
+                foreach (var row in table.DataRange.Rows())
+                {
+                    TItem item = new();
+                    foreach (var property in typeof(TItem).GetProperties())
+                    {
+                        var excelColumnAttribute = property.GetCustomAttribute<ExcelColumnAttribute>();
+                        if (excelColumnAttribute != null)
+                        {
+                            var cellValue = row.Field(excelColumnAttribute.ColumnName ?? property.Name);
+                            if (property.PropertyType == typeof(string))
+                            {
+                                property.SetValue(item, cellValue.GetValue<string>());
+                            }
+                            else if (property.PropertyType == typeof(decimal))
+                            {
+                                property.SetValue(item, cellValue.GetValue<decimal>());
+                            }
+                            else if (property.PropertyType == typeof(double))
+                            {
+                                property.SetValue(item, cellValue.GetValue<double>());
+                            }
+                            else if (property.PropertyType == typeof(int))
+                            {
+                                property.SetValue(item, cellValue.GetValue<int>());
+                            }
+                            else if (property.PropertyType == typeof(DateTime))
+                            {
+                                property.SetValue(item, cellValue.GetValue<DateTime>());
+                            }
+                        }
+                    }
+                    items.Add(item);
+                }
+            }
+        }
+        return items;
+    }
+}

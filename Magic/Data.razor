@@ -1,0 +1,725 @@
+﻿@typeparam TItem where TItem : class, new()
+@typeparam CItem where CItem : class, new()
+
+<Offcanvas @ref="profilecanvas">
+    <HeaderTemplate>
+        <div class="row w-100">
+            <div class="col-auto d-flex align-items-center">
+                <a class="list-group-item list-group-item-action border-0">
+                    <h5 class="card-title">
+                        @typeof(TItem).Name Profile
+                    </h5>
+                </a>
+            </div>
+            <div class="col-auto ms-auto text-end mt-n1">
+                @if (InputFields is not null)
+                {
+                    <Button Class="text-primary p-0" TooltipTitle="Update Item" @onclick="async() => await modal.ShowAsync()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83l3.75 3.75l1.83-1.83a.996.996 0 0 0 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" /></svg>
+                    </Button>
+
+                    <Button Class="text-danger p-0" TooltipTitle="Remove Item" @onclick="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="m15.5 4l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2-5V9h8v10H8v-5zm2 4h4v-4h2l-4-4l-4 4h2z" />
+                        </svg>
+                    </Button>
+                }
+            </div>
+        </div>
+    </HeaderTemplate>
+    <BodyTemplate>
+        @if (Profile is not null)
+        {
+            @Profile(Item)
+        }
+    </BodyTemplate>
+</Offcanvas>
+
+@if (InputFields is not null)
+{
+    <Modal @ref="modal" Title="@("Update " + typeof(TItem).Name)">
+        <BodyTemplate>
+            <EditForm Model="Item" OnValidSubmit="Update">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                @InputFields(Item)
+
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="async() => await modal.HideAsync()">Close</Button>
+                        <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Class="float-end me-2">Submit</Button>
+                    </div>
+                </div>
+            </EditForm>
+        </BodyTemplate>
+    </Modal>
+}
+<Card>
+    <CardHeader>
+        <div class="row">
+            <div class="col-auto d-flex align-items-center">
+                <h5 class="card-title">
+                    @typeof(TItem).Name.Pluralize()
+                </h5>
+            </div>
+            <div class="col-auto ms-auto text-end mt-n1">
+                @if (InputFields is not null)
+                {
+                    @if (Downloading)
+                    {
+                        <Button Class="text-primary p-0" TooltipTitle="Download Items" @onclick="Download">
+                            <Icon Name="IconName.CloudArrowDown" Size="IconSize.x1" />
+                        </Button>
+                    }
+                    @if (Uploading)
+                    {
+                        <Button Class="text-primary p-0" TooltipTitle="Upload Items" @onclick="Upload">
+                            <Icon Name="IconName.CloudArrowUp" Size="IconSize.x1" />
+                        </Button>
+                    }
+                    @if (selectedItems.Count is not 0)
+                    {
+                        if (Suspension)
+                        {
+                            <Button Class="text-danger p-0" TooltipTitle="Suspend Selected Items" @onclick="() => BulkSuspend(true)">
+                                <Icon Name="IconName.X" Size="IconSize.x1" />
+                            </Button>
+
+                            <Button Class="text-success p-0" TooltipTitle="Activate Selected Items" @onclick="() => BulkSuspend(false)">
+                                <Icon Name="IconName.Check" Size="IconSize.x1" />
+                            </Button>
+                        }
+                        if (Deleting)
+                        {
+                            <Button Class="text-danger p-0" TooltipTitle="Delete Selected Items" @onclick="BulkDelete">
+                                <Icon Name="IconName.Trash" Size="IconSize.x3" />
+                            </Button>
+                        }
+                    }
+                    @if (Creating)
+                    {
+                        <Button Class="text-primary p-0" TooltipTitle="Add New Item" @onclick="Add">
+                            <Icon Name="IconName.Plus" Size="IconSize.x1" />
+                        </Button>
+                    }
+                }
+                @if (Categorized)
+                {
+                    <Button Class="text-primary p-0" TooltipTitle="Show Category" @onclick="offcanvas.ShowAsync">
+                        <Icon Name="IconName.List" Size="IconSize.x1" />
+                    </Button>
+                }
+            </div>
+        </div>
+    </CardHeader>
+    <CardBody>
+        <Grid @ref="grid"
+              ItemsPerPageText="5"
+              PaginationItemsTextFormat=""
+              TItem="TItem"
+              Data="Items"
+              Class="table table-hover table-bordered table-striped"
+              FiltersRowCssClass="bg-primary text-white bg-opacity-25 border-bottom-0"
+              HeaderRowCssClass="bg-primary text-white border-bottom-0"
+              SelectedItemsChanged="OnSelectedItemsChanged"
+              OnRowClick="Select"
+              OnRowDoubleClick="ShowProfile"
+              SelectionMode="GridSelectionMode.Multiple"
+              PageSize="10"
+              PageSizeSelectorItems="@(new int[] { 5, 10, 20 })"
+              AllowFiltering="AllowFiltering"
+              AllowSorting="AllowSorting"
+              AllowRowClick="AllowRowClick"
+              PageSizeSelectorVisible="PageSizeSelectorVisible"
+              AllowPaging="AllowPaging"
+              AllowSelection="AllowSelection"
+              Responsive="true">
+
+            @if (Columns is not null)
+            {
+                @Columns(Item)
+            }
+
+            @if (Suspension && GetProperty(Item, typeof(SuspendAttribute)) is not null)
+            {
+                @* SortKeySelector = "item => (IComparable?)item.GetType().GetProperties().FirstOrDefault(p => p.CustomAttributes.Any(t => t.AttributeType == typeof(SuspendAttribute)))" *@
+                <GridColumn TItem="TItem" HeaderText="Status" PropertyName="@GetProperty(Item, typeof(SuspendAttribute))?.Name">
+                    @if (GetStatus(context))
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Suspended</span>
+                    }
+                </GridColumn>
+            }
+
+            @if (InputFields is not null)
+            {
+                <GridColumn TItem="TItem" HeaderText="*" Filterable="false">
+                    <Dropdown>
+                        <DropdownToggleButton Color="ButtonColor.None">
+                            <Icon Name="IconName.List" />
+                        </DropdownToggleButton>
+                        <DropdownMenu>
+                            <DropdownItem Class="dropdown-item d-flex gap-2 align-items-center btn btn-sm text-primary" Type="ButtonType.Button" @onclick="async() => await modal.ShowAsync()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83l3.75 3.75l1.83-1.83a.996.996 0 0 0 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" /></svg>
+                                Edit
+                            </DropdownItem>
+
+                            @if (GetStatus(context))
+                            {
+                                <DropdownItem Class="dropdown-item d-flex gap-2 align-items-center btn btn-sm text-danger" Type="ButtonType.Button" @onclick="Suspend">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.93 6 11v5l-2 2v1h16v-1l-2-2zm-3.5-6.2l-2.8 3.4h2.8V15h-5v-1.8l2.8-3.4H9.5V8h5v1.8z" />
+                                    </svg>
+                                    Suspend
+                                </DropdownItem>
+                            }
+                            else
+                            {
+                                <DropdownItem Class="dropdown-item d-flex gap-2 align-items-center btn btn-sm text-success" Type="ButtonType.Button" @onclick="Suspend">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M7.58 4.08L6.15 2.65C3.75 4.48 2.17 7.3 2.03 10.5h2a8.445 8.445 0 0 1 3.55-6.42zm12.39 6.42h2c-.15-3.2-1.73-6.02-4.12-7.85l-1.42 1.43a8.495 8.495 0 0 1 3.54 6.42zM18 11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c.14 0 .27-.01.4-.04c.65-.14 1.18-.58 1.44-1.18c.1-.24.15-.5.15-.78h-4c.01 1.1.9 2 2.01 2z" />
+                                    </svg>
+                                    Activate
+                                </DropdownItem>
+                            }
+
+                            <DropdownItem Class="dropdown-item d-flex gap-2 align-items-center btn btn-sm text-danger" Type="ButtonType.Button" @onclick="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="m15.5 4l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2-5V9h8v10H8v-5zm2 4h4v-4h2l-4-4l-4 4h2z" />
+                                </svg>
+                                Delete
+                            </DropdownItem>
+
+                        </DropdownMenu>
+                    </Dropdown>
+                </GridColumn>
+            }
+        </Grid>
+    </CardBody>
+</Card>
+
+<ConfirmDialog @ref="dialog" />
+
+@if (Categorized)
+{
+    <Offcanvas @ref="offcanvas" Placement="Placement.Start">
+        <HeaderTemplate>
+            <div class="row w-100">
+                <div class="col-auto d-flex align-items-center">
+                    <a class="list-group-item list-group-item-action border-0">
+                        <h5 class="card-title">
+                            @typeof(CItem).Name.Pluralize()
+                            <span class="badge bg-primary">@Items?.Count()</span>
+                        </h5>
+                    </a>
+                </div>
+                <div class="col-auto ms-auto text-end mt-n1">
+                    @if (CategoryInputFields is not null)
+                    {
+                        @if (CategoryCreating)
+                        {
+                            <Button Class="text-primary p-0" TooltipTitle="Add New Item" @onclick="CAdd">
+                                <Icon Name="IconName.Plus" Size="IconSize.x1" />
+                            </Button>
+                        }
+                    }
+                </div>
+            </div>
+        </HeaderTemplate>
+        <BodyTemplate>
+            @if (RowCategory is not null)
+            {
+                foreach (var category in Categories)
+                {
+                    <div class="d-flex align-items-start border-top">
+                        <div class="flex-grow-1">
+                            <div class="row">
+                                <div class="col d-flex align-items-center">
+                                    <a class="list-group-item list-group-item-action border-0" @onclick="(() => CSelect(category))">
+                                        @RowCategory(category)
+                                    </a>
+                                </div>
+                                <div class="col-3 d-flex justify-content-end ms-0 m-3">
+                                    @if (CategoryInputFields is not null)
+                                    {
+                                        <Button Class="text-primary p-0" TooltipTitle="Update Item" @onclick="async() => await cmodal.ShowAsync()">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m14.06 9.02l.92.92L5.92 19H5v-.92l9.06-9.06M17.66 3c-.25 0-.51.1-.7.29l-1.83 1.83l3.75 3.75l1.83-1.83a.996.996 0 0 0 0-1.41l-2.34-2.34c-.2-.2-.45-.29-.71-.29zm-3.6 3.19L3 17.25V21h3.75L17.81 9.94l-3.75-3.75z" /></svg>
+                                        </Button>
+                                        <Button Class="text-danger p-0" TooltipTitle="Remove Item" @onclick="CDelete">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                                <path fill="currentColor" d="m15.5 4l-1-1h-5l-1 1H5v2h14V4zM6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2-5V9h8v10H8v-5zm2 4h4v-4h2l-4-4l-4 4h2z" />
+                                            </svg>
+                                        </Button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </BodyTemplate>
+    </Offcanvas>
+
+    @if (CategoryInputFields is not null)
+    {
+        <Modal @ref="cmodal" Title="@("Update " + typeof(CItem).Name)">
+            <BodyTemplate>
+                <EditForm Model="Category" OnValidSubmit="CUpdate">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    @CategoryInputFields(Category)
+
+                    <div class="row">
+                        <div class="col-md-12 text-right">
+                            <Button Type="ButtonType.Button" Color="ButtonColor.Secondary" Class="float-end" @onclick="async() => await cmodal.HideAsync()">Close</Button>
+                            <Button Type="ButtonType.Submit" Color="ButtonColor.Success" Class="float-end me-2">Submit</Button>
+                        </div>
+                    </div>
+                </EditForm>
+            </BodyTemplate>
+        </Modal>
+    }
+}
+
+@code {
+    private ConfirmDialog dialog = default!;
+    private Offcanvas offcanvas = default!;
+    private Offcanvas profilecanvas = default!;
+
+    #region Category
+    [Parameter] public List<CItem> Categories { get; set; } = default!;
+    [Parameter] public RenderFragment<CItem> RowCategory { get; set; } = default!;
+    [Parameter] public RenderFragment<CItem> CategoryInputFields { get; set; } = default!;
+    [Parameter] public EventCallback<CItem> OnRowClick { get; set; }
+
+    CItem Category = new();
+    #region Actions
+    private Modal cmodal = default!;
+    async void CAdd()
+    {
+        Category = new();
+        await cmodal.ShowAsync();
+    }
+    async void CUpdate()
+    {
+        var service = factory.GetDataService<CItem>();
+
+        if (Categories.Contains(Category))
+        {
+            service.Update(Category);
+        }
+        else
+        {
+            service.Add(Category);
+        }
+
+        // ui
+        await cmodal.HideAsync();
+        Refresh();
+    }
+    async void CDelete()
+    {
+        var confirm = await dialog.ShowAsync(
+            title: $"Delete {Category.GetType().Name}",
+            message1: $"Are you sure you want to delete this {Category.GetType().Name.ToLower()}?",
+            message2: "No going back from this",
+            confirmDialogOptions: new ConfirmDialogOptions
+                {
+                    YesButtonText = "OK",
+                    YesButtonColor = ButtonColor.Danger,
+                    NoButtonText = "Cancel",
+                    NoButtonColor = ButtonColor.Secondary,
+                }
+        );
+        if (confirm)
+        {
+            var service = factory.GetDataService<CItem>();
+            service.Delete(Category);
+            Refresh();
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Secondary, "Canceled."));
+        }
+    }
+    #endregion
+    // OnRowClick
+    async void CSelect(CItem item)
+    {
+        Category = item;
+        await OnRowClick.InvokeAsync(item);
+    }
+    #endregion
+
+    #region Setup
+    [Parameter] public bool Categorized { get; set; } = false;
+    [Parameter] public bool CategoryActions { get; set; } = false;
+    [Parameter] public bool CategoryCreating { get; set; } = false;
+    [Parameter] public bool CategoryEditing { get; set; } = false;
+    [Parameter] public bool CategoryDeleting { get; set; } = false;
+
+    [Parameter] public bool Actions { get; set; } = true;
+    [Parameter] public bool Creating { get; set; } = true;
+    [Parameter] public bool Editing { get; set; } = true;
+    [Parameter] public bool Deleting { get; set; } = true;
+    [Parameter] public bool Downloading { get; set; } = true;
+    [Parameter] public bool Uploading { get; set; } = true;
+
+    [Parameter] public bool Imaging { get; set; } = false;
+    [Parameter] public bool Suspension { get; set; } = false;
+    #endregion
+
+    #region Item
+    [Parameter] public List<TItem> Items { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem>? Profile { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem> InputFields { get; set; } = default!;
+    [Parameter] public RenderFragment<TItem> Columns { get; set; } = default!;
+    [Parameter] public EventCallback RefreshCll { get; set; }
+
+    TItem Item = new();
+    #region Form
+    private Modal modal = default!;
+    async void Add()
+    {
+        Item = new();
+        await modal.ShowAsync();
+    }
+    async void Update()
+    {
+        var service = factory.GetDataService<TItem>();
+
+        if (Items.Contains(Item))
+        {
+            service.Update(Item);
+        }
+        else
+        {
+            service.Add(Item);
+        }
+
+        // ui
+        await modal.HideAsync();
+        Refresh();
+    }
+    #endregion
+    #region Delete
+    async void Delete()
+    {
+        var confirm = await dialog.ShowAsync(
+            title: $"Delete {Item.GetType().Name}",
+            message1: $"Are you sure you want to delete this {Item.GetType().Name.ToLower()}?",
+            message2: "No going back from this",
+            confirmDialogOptions: new ConfirmDialogOptions
+                {
+                    YesButtonText = "OK",
+                    YesButtonColor = ButtonColor.Danger,
+                    NoButtonText = "Cancel",
+                    NoButtonColor = ButtonColor.Secondary,
+                }
+        );
+        if (confirm)
+        {
+            var service = factory.GetDataService<TItem>();
+            service.Delete(Item);
+            Refresh();
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Secondary, "Canceled."));
+        }
+    }
+    async void BulkDelete()
+    {
+        if (selectedItems.Count is not 0)
+        {
+            var confirm = await dialog.ShowAsync(
+                title: $"Delete {Item.GetType().Name}",
+                message1: $"Are you sure you want to delete {selectedItems.Count} {Item.GetType().Name.ToLower()}?",
+                message2: "No going back from this",
+                confirmDialogOptions: new ConfirmDialogOptions
+                    {
+                        YesButtonText = "OK",
+                        YesButtonColor = ButtonColor.Danger,
+                        NoButtonText = "Cancel",
+                        NoButtonColor = ButtonColor.Secondary,
+                    }
+            );
+            if (confirm)
+            {
+                var service = factory.GetDataService<TItem>();
+                service.Delete(selectedItems.ToList());
+                Refresh();
+            }
+            else
+            {
+                toast.Notify(new(ToastType.Secondary, "Canceled."));
+            }
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Secondary, "No item selected."));
+        }
+    }
+    #endregion
+    #region Suspend
+    async void Suspend()
+    {
+        var property = GetProperty(Item, typeof(SuspendAttribute));
+        var value = GetStatus(Item);
+
+        string action = value ? "Suspend" : "Reactivate";
+
+        var confirm = await dialog.ShowAsync(
+            title: $"{action} {Item.GetType().Name}",
+            message1: $"Are you sure you want to {action.ToLower()} this {Item.GetType().Name.ToLower()}?",
+            message2: $"Ofcourse, you can {action.ToLower()} anytime",
+            confirmDialogOptions: new ConfirmDialogOptions
+                {
+                    YesButtonText = "OK",
+                    YesButtonColor = value ? ButtonColor.Danger : ButtonColor.Success,
+                    NoButtonText = "Cancel",
+                    NoButtonColor = ButtonColor.Secondary,
+                }
+        );
+        if (confirm)
+        {
+            var service = factory.GetDataService<TItem>();
+            property?.SetValue(Item, !value);
+            service.Update(Item);
+            Refresh();
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Secondary, "Canceled."));
+        }
+    }
+    async void BulkSuspend(bool value)
+    {
+        if (selectedItems.Count is not 0)
+        {
+            string action = value ? "Suspend" : "Reactivate";
+
+            var confirm = await dialog.ShowAsync(
+                title: $"{action} {Item.GetType().Name}",
+                message1: $"Are you sure you want to {action.ToLower()} {selectedItems.Count} {Item.GetType().Name.ToLower()}?",
+                message2: $"Ofcourse, you can {action.ToLower()} all anytime",
+                confirmDialogOptions: new ConfirmDialogOptions
+                    {
+                        YesButtonText = "OK",
+                        YesButtonColor = value ? ButtonColor.Danger : ButtonColor.Success,
+                        NoButtonText = "Cancel",
+                        NoButtonColor = ButtonColor.Secondary,
+                    }
+            );
+            if (confirm)
+            {
+                foreach (var selecteditem in selectedItems)
+                {
+                    var property = GetProperty(selecteditem, typeof(SuspendAttribute));
+                    property?.SetValue(selecteditem, !value);
+                }
+
+                var service = factory.GetDataService<TItem>();
+                service.Update(selectedItems.ToList());
+                Refresh();
+            }
+            else
+            {
+                toast.Notify(new(ToastType.Secondary, "Canceled."));
+            }
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Secondary, "No item selected."));
+        }
+    }
+    bool GetStatus(TItem item)
+    {
+        var property = GetProperty(item, typeof(SuspendAttribute));
+        var value = property?.GetValue(item);
+        return Convert.ToBoolean(value);
+    }
+    #endregion
+    #region load
+    async void Download()
+    {
+        var confirm = await dialog.ShowAsync(
+            title: $"Download {Item.GetType().Name}",
+            message1: $"Click 'Download' to generate your report.",
+            confirmDialogOptions: new ConfirmDialogOptions
+                {
+                    YesButtonText = "Download",
+                    YesButtonColor = ButtonColor.Success,
+                    NoButtonText = "Cancel",
+                    NoButtonColor = ButtonColor.Secondary,
+                }
+        );
+        if (confirm)
+        {
+            try
+            {
+                using (var workbook = new XLWorkbook())
+                {
+                    // creating the datasheet for the types
+                    var worksheet = workbook.Worksheets.Add(typeof(TItem).Name);
+
+                    // creating the columns headers
+                    char i = 'a';
+                    foreach (var property in Item.GetType().GetProperties())
+                    {
+                        var excelColumnAttribute = property.GetCustomAttribute<ReportAttribute>();
+                        if (excelColumnAttribute != null)
+                        {
+                            worksheet.Cell($"{i}1").Value = property.Name;
+                            ++i;
+                        }
+                    }
+
+                    // inputing rows items
+                    int k = 2;
+                    foreach (var item in selectedItems.Count is not 0 ? selectedItems.ToList() : Items)
+                    {
+                        char j = 'a';
+                        foreach (var property in typeof(TItem).GetProperties())
+                        {
+                            var excelColumnAttribute = property.GetCustomAttribute<ReportAttribute>();
+                            if (excelColumnAttribute != null)
+                            {
+                                worksheet.Cell($"{j}{k}").Value = property?.GetValue(item)?.ToString();
+                                ++j;
+                            }
+                        }
+                        ++k;
+                    }
+
+                    var subrange = worksheet.Range(
+                                    worksheet.FirstCellUsed().Address,
+                                    worksheet.LastCellUsed().Address
+                                    );
+                    var table = subrange.CreateTable();
+                    table.Name = typeof(TItem).Name;
+                    worksheet.Columns().AdjustToContents();
+
+                    //file service
+                    var files = factory.GetFileService();
+                    files.open(workbook, typeof(TItem).Name);
+                }
+                toast.Notify(new(ToastType.Secondary, $"{typeof(TItem).Name.Pluralize()} Downloaded!"));
+            }
+            catch (Exception ex)
+            {
+                //toastService.ShowError($"{Type.Name} Download: {ex.Message}!"); // upload failed
+                toast.Notify(new(ToastType.Danger, ex.Message));
+            }
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Secondary, "Canceled."));
+        }
+    }
+    async void Upload()
+    {
+        var confirm = await dialog.ShowAsync<Upload<TItem>>(
+            title: $"Upload {Item.GetType().Name}",
+            confirmDialogOptions: new ConfirmDialogOptions
+                {
+                    YesButtonText = "Download Template",
+                    YesButtonColor = ButtonColor.Success,
+                    NoButtonText = "Close",
+                    NoButtonColor = ButtonColor.Secondary,
+                }
+        );
+        if (confirm)
+        {
+            if (typeof(TItem).GetProperties().Any(p => p.GetCustomAttribute<ExcelColumnAttribute>() is not null))
+            {
+                using (var workbook = new XLWorkbook())
+                {
+                    // creating the datasheet for the types
+                    var worksheet = workbook.Worksheets.Add(typeof(TItem).Name);
+
+                    char i = 'a';
+                    foreach (var property in typeof(TItem).GetProperties())
+                    {
+                        var excelColumnAttribute = property.GetCustomAttribute<ExcelColumnAttribute>();
+                        if (excelColumnAttribute != null)
+                        {
+                            worksheet.Cell($"{i}1").Value = excelColumnAttribute.ColumnName ?? property.Name;
+                            ++i;
+                        }
+                    }
+
+                    var subrange = worksheet.Range(
+                                    worksheet.FirstCellUsed().Address,
+                                    worksheet.LastCellUsed().Address
+                                    );
+                    var table = subrange.CreateTable();
+                    table.Name = typeof(TItem).Name;
+                    worksheet.Columns().AdjustToContents();
+
+                    //file service
+                    var files = factory.GetFileService();
+                    files.open(workbook, typeof(TItem).Name);
+                }
+            }
+            else
+                toast.Notify(new(ToastType.Danger, $"TypeError: no excel column found on {typeof(TItem).FullName} type!"));
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Success, "Completed."));
+            Refresh();
+        }
+    }
+    #endregion
+    PropertyInfo? GetProperty(TItem item, Type attribute) =>
+    item.GetType().GetProperties()
+        .FirstOrDefault(p =>
+            p.CustomAttributes.Any(t => t.AttributeType == attribute)
+        );
+    async void Refresh()
+    {
+        await RefreshCll.InvokeAsync();
+        StateHasChanged();
+    }
+    // OnRowClick
+    void Select(GridRowEventArgs<TItem> args)
+    {
+        Item = args.Item;
+    }
+    // OnRowDoubleClick
+    private async Task ShowProfile(GridRowEventArgs<TItem> args)
+    {
+        if (Profile is not null)
+        {
+            await profilecanvas.ShowAsync();
+        }
+        else
+        {
+            toast.Notify(new(ToastType.Warning, "Profile is not set"));
+        }
+    }
+    #region Grid
+    [Parameter] public bool AllowRowClick { get; set; } = true;
+    [Parameter] public bool PageSizeSelectorVisible { get; set; } = true;
+    [Parameter] public bool AllowFiltering { get; set; } = true;
+    [Parameter] public bool AllowSorting { get; set; } = true;
+    [Parameter] public bool AllowPaging { get; set; } = true;
+    [Parameter] public bool AllowSelection { get; set; } = true;
+
+    Grid<TItem>? grid = default!;
+    private HashSet<TItem> selectedItems = new();
+    private Task OnSelectedItemsChanged(HashSet<TItem> items)
+    {
+        selectedItems = items is not null && items.Any() ? items : new();
+        return Task.CompletedTask;
+    }
+    #endregion
+    #endregion
+}

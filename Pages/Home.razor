@@ -1,7 +1,179 @@
 ﻿@page "/"
+@using GitHubPagesDemo.Data
+@using GitHubPagesDemo.Magic
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext context
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hey, Khayaal!</h1>
 
 Welcome to your new app.
+
+<Data TItem="Employee1" CItem="Category"
+      Items="Items" Categories=Categories OnRowClick="RefreshCategory"
+      Context="contxt" RefreshCll="async () => Items = context.Employee1.ToList()"
+      Suspension=true Categorized=true
+      CategoryActions=true CategoryCreating=true CategoryEditing=true CategoryDeleting=true>
+    <Profile>
+        @if (context is not null)
+        {
+            <Card>
+                <CardHeader>
+                    @contxt.Name
+                </CardHeader>
+                <CardBody>
+                    <table class="table table-sm my-2">
+                        <tbody>
+                            <tr>
+                                <th>ID</th>
+                                <td>@contxt.Id</td>
+                            </tr>
+                            <tr>
+                                <th>Name</th>
+                                <td>@contxt.Name</td>
+                            </tr>
+                            <tr>
+                                <th>Date</th>
+                                <td>@contxt.DOJ</td>
+                            </tr>
+                            <tr>
+                                <th>Designation</th>
+                                <td>@contxt.Designation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </CardBody>
+            </Card>
+        }
+    </Profile>
+
+    <InputFields>
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Name: <span class="text-danger">*</span></label>
+            <div class="col-md-10">
+                <InputText @bind-Value="@contxt.Name" class="form-control" Placeholder="Enter name" />
+                <ValidationMessage For="@(() => contxt.Name)" />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <Switch @bind-Value="contxt.IsActive" Label="Disabled switch checkbox input" />
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">IsActive: <span class="text-danger">*</span></label>
+            <div class="col-md-10">
+                <Switch @bind-Value="contxt.IsActive" />
+                <ValidationMessage For="@(() => contxt.IsActive)" />
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Id: <span class="text-danger">*</span></label>
+            <div class="col-md-10">
+                <CurrencyInput TValue="int" @bind-Value="@contxt.Id" Locale="en-NG" Placeholder="Enter amount" />
+                <ValidationMessage For="@(() => contxt.Id)" />
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Id: <span class="text-danger">*</span></label>
+            <div class="col-md-10">
+                <NumberInput TValue="int" @bind-Value="@contxt.Id" Placeholder="Enter amount" />
+                <ValidationMessage For="@(() => contxt.Id)" />
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Date: <span class="text-danger">*</span></label>
+            <div class="col-md-10">
+                <DateInput TValue="DateOnly?" @bind-Value="@contxt.DOJ" Placeholder="Enter Date" />
+                <ValidationMessage For="@(() => contxt.DOJ)" />
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-md-2 col-form-label">Time: <span class="text-danger">*</span></label>
+            <div class="col-md-10">
+                <TimeInput TValue="TimeOnly?" @bind-Value="@contxt.TOJ" />
+                <ValidationMessage For="@(() => contxt.TOJ)" />
+            </div>
+        </div>
+    </InputFields>
+    <Columns>
+        <GridColumn TItem="Employee1" HeaderText="Id" PropertyName="Id" SortKeySelector="item => item.Id">
+            @context.Id
+        </GridColumn>
+        <GridColumn TItem="Employee1" HeaderText="Employee Name" PropertyName="Name" SortKeySelector="item => item.Name">
+            @context.Name
+        </GridColumn>
+        <GridColumn TItem="Employee1" HeaderText="Designation" PropertyName="Designation" SortKeySelector="item => item.Designation">
+            @context.Designation
+        </GridColumn>
+        <GridColumn TItem="Employee1" HeaderText="DOJ" PropertyName="DOJ" SortKeySelector="item => item.DOJ">
+            @context.DOJ
+        </GridColumn>
+        <GridColumn TItem="Employee1" HeaderText="TOJ" PropertyName="TOJ" SortKeySelector="item => item.TOJ">
+            @context.TOJ
+        </GridColumn>
+    </Columns>
+    @* <CategoryInputFields Context="category">
+    @category?.Title
+    </CategoryInputFields> *@
+    <RowCategory Context="category">
+        @category.Title
+        <span class="badge bg-primary">@category?.Description</span>
+        <div class="small">
+            @category?.Subtitle
+        </div>
+    </RowCategory>
+</Data>
+
+@code {
+    List<Employee1> Items = new();
+    List<Category>? Categories = new();
+    Category? Item;
+    private void RefreshCategory(Category item)
+    {
+        Item = item;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await context.Employee1.AnyAsync())
+        {
+            await context.AddRangeAsync(new List<Employee1>
+            {
+                new Employee1 { /* Id = 107,  */Name = "Alice", Designation = "AI Engineer", DOJ = new DateOnly(1998, 11, 17), IsActive = true },
+                new Employee1 { /* Id = 103,  */Name = "Bob", Designation = "Senior DevOps Engineer", DOJ = new DateOnly(1985, 1, 5), IsActive = true },
+                new Employee1 { /* Id = 106,  */Name = "John", Designation = "Data Engineer", DOJ = new DateOnly(1995, 4, 17), IsActive = true },
+                new Employee1 { /* Id = 104,  */Name = "Pop", Designation = "Associate Architect", DOJ = new DateOnly(1985, 6, 8), IsActive = false },
+                new Employee1 { /* Id = 105,  */Name = "Ronald", Designation = "Senior Data Engineer", DOJ = new DateOnly(1991, 8, 23), IsActive = true },
+                new Employee1 { /* Id = 102,  */Name = "Line", Designation = "Architect", DOJ = new DateOnly(1977, 1, 12), IsActive = true },
+                new Employee1 { /* Id = 101,  */Name = "Daniel", Designation = "Architect", DOJ = new DateOnly(1977, 1, 12), IsActive = true },
+                new Employee1 { /* Id = 113,  */Name = "Merlin", Designation = "Senior Consultant", DOJ = new DateOnly(1989, 10, 2), IsActive = true },
+                new Employee1 { /* Id = 117,  */Name = "Sharna", Designation = "Data Analyst", DOJ = new DateOnly(1994, 5, 12), IsActive = true },
+                new Employee1 { /* Id = 108,  */Name = "Zayne", Designation = "Data Analyst", DOJ = new DateOnly(1991, 1, 1), IsActive = true },
+                new Employee1 { /* Id = 109,  */Name = "Isha", Designation = "App Maker", DOJ = new DateOnly(1996, 7, 1), IsActive = true },
+                new Employee1 { /* Id = 111,  */Name = "Glenda", Designation = "Data Engineer", DOJ = new DateOnly(1994, 1, 12), IsActive = true },
+            });
+            await context.SaveChangesAsync();
+        }
+        Items = context.Employee1.ToList();
+
+        if (Items.Count is not 0)
+        {
+            Categories = Items
+            .GroupBy(m => new { D = m?.DOJ.Value.ToString() })/*ShortDate*/
+            .Select(m => new Category
+                {
+                    Title = m.Key.D,
+                    // Subtitle = string.Format(Formatter, "{0:c}", m.Sum(a => a.Amount)),
+                    Description = m.Count().ToString()
+                })
+            .ToList();
+        }
+
+    }
+}
